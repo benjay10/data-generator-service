@@ -9,6 +9,8 @@ export const PREFIXES = `
   PREFIX dct:  <http://purl.org/dc/terms/>
   PREFIX dbp:  <http://dbpedia.org/ontology/>
 `;
+export const FILE_PREFIX = "http://mu.semte.ch/services/file-service/files/";
 
 export const MAX_TRIPLES_PER_QUERY = 100;
 
+export const SHARE_PATH = "/share/";

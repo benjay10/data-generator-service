@@ -14,10 +14,11 @@ app.get("/generate", async (req, res) => {
   const targetGraph   = req.query["target-graph"]            || "http://mu.semte.ch/application";
   const withFiles     = req.query["with-files"] == "true" ? true : false;
   const sudo          = req.query["target-graph"] ? true : false;
+  let fileSize;
   if (["small", "medium", "large", "extra"].some((i) => i == req.query["file-size"])) {
-    const fileSize = req.query["file-size"];
+    fileSize = req.query["file-size"];
   } else {
-    const fileSize = "small";
+    fileSize = "small";
   }
 
   for (let batchNum = 0; batchNum < batches; batchNum++) {
@@ -25,8 +26,8 @@ app.get("/generate", async (req, res) => {
     //TODO: Create books with files
     //TODO: Save books with files
     //Create books
-    console.log(`Starting batch ${batchNum}, of total ${batches}.`);
-    const books = bks.makeBooks(itemsPerBatch);
+    console.log(`Starting batch ${batchNum + 1}, of total ${batches}.`);
+    const books = bks.makeBooks(itemsPerBatch, withFiles, fileSize);
     const booksInTriples = books.map(book => book.toTriples()).flat();
     qs.insert(booksInTriples, targetGraph, sudo);
   }
