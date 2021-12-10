@@ -1,0 +1,19 @@
+{
+  "name": "data-generator",
+  "version": "0.0.3",
+  "description": "Microservice that generates some random data",
+  "type": "module",
+  "dependencies": {
+    "@lblod/mu-auth-sudo": "^0.2.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redpencilio/data-generator.git"
+  },
+  "author": "redpencil.io",
+  "license": "MIT"
+}
