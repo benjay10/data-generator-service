@@ -3,6 +3,7 @@ import { app }      from "mu";
 import * as express from "express";
 import * as bks     from "./lib/MuBook.js";
 import * as qs      from "./lib/Queries.js";
+import * as bat     from "./lib/Batching.js";
 
 app.use(express.json({type: "application/json"}));
 
@@ -20,19 +21,15 @@ app.get("/generate", async (req, res) => {
   } else {
     fileSize = "small";
   }
+  const options = { batches, itemsPerBatch, pausePerBatch, targetGraph, withFiles, sudo, fileSize };
 
-  for (let batchNum = 0; batchNum < batches; batchNum++) {
-    //TODO: Create files for every book if necessary
-    //TODO: Create books with files
-    //TODO: Save books with files
-    //Create books
-    console.log(`Starting batch ${batchNum + 1}, of total ${batches}.`);
-    const books = bks.makeBooks(itemsPerBatch, withFiles, fileSize);
-    const booksInTriples = books.map(book => book.toTriples()).flat();
-    qs.insert(booksInTriples, targetGraph, sudo);
+  //Push batches onto a global queue
+  for (let batchNum = 0; batchNum < options.batches; batchNum++) {
+    bat.batchQueue.push({ batchNum, ...options });
   }
+  bat.startBatches();
 
-  res.status(201).json(req.query);
+  res.status(201).json({...req.query, status: "Batches scheduled" });
 });
 
 app.get("/clear", async (req, res) => {
