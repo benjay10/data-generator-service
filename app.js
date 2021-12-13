@@ -3,6 +3,7 @@ import { app }      from "mu";
 import * as express from "express";
 import * as bks     from "./lib/MuBook.js";
 import * as au      from "./lib/MuAuthor.js";
+import * as mf      from "./lib/MuFile.js";
 import * as qs      from "./lib/Queries.js";
 import * as bat     from "./lib/Batching.js";
 
@@ -77,6 +78,29 @@ app.get("/createAuthor", async (req, res) => {
   await qs.insert(triples, targetGraph, sudo);
   
   res.status(201).json({...req.query, status: "Author inserted"});
+});
+
+app.get("/createFiles", async (req, res) => {
+  const items       = Number(req.query["items"]) || 1;
+  const targetGraph = req.query["target-graph"] || "http://mu.semte.ch/application";
+  const sudo        = req.query["target-graph"] ? true : false;
+  let fileSize;
+  if (["small", "medium", "large", "extra"].some((i) => i == req.query["file-size"])) {
+    fileSize = req.query["file-size"];
+  } else {
+    fileSize = "small";
+  }
+
+  let files = [];
+  for (let i = 0; i < items; i++) {
+    let f = new mf.MuFile(fileSize);
+    f.save();
+    files.push(f);
+  }
+  const triples = files.map(f => f.toTriples()).flat();
+  await qs.insert(triples, targetGraph, sudo);
+  
+  res.status(201).json({...req.query, status: "Files saved and inserted"});
 });
 
 app.get("/clear", async (req, res) => {
