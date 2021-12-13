@@ -2,6 +2,7 @@
 import { app }      from "mu";
 import * as express from "express";
 import * as bks     from "./lib/MuBook.js";
+import * as au      from "./lib/MuAuthor.js";
 import * as qs      from "./lib/Queries.js";
 import * as bat     from "./lib/Batching.js";
 
@@ -50,6 +51,32 @@ app.get("/createBooks", async (req, res) => {
   await qs.insert(booksInTriples, targetGraph, sudo);
 
   res.status(201).json({...req.query, status: "Books inserted"});
+});
+
+app.get("/createAuthor", async (req, res) => {
+  const bookUri     = req.query["book-uri"];
+  const authorUri   = req.query["author-uri"];
+  const items       = Number(req.query.items)   || 1;
+  const targetGraph = req.query["target-graph"] || "http://mu.semte.ch/application";
+  const sudo        = req.query["target-graph"] ? true : false;
+  
+  if (bookUri && authorUri) {
+    res.status(409).send({status: "Conflict: you can not give both book-uri and author-uri options."});
+    return;
+  }
+  if (authorUri && req.query.items) {
+    res.status(409).send({status: "Conflict: you can not give both items and author-uri options."});
+    return;
+  }
+
+  let authors = [];
+  for (let i = 0; i < items; i++) {
+    authors.push(new au.MuAuthor(authorUri, (bookUri ? [bookUri] : [])));
+  }
+  const triples = authors.map(a => a.toTriples()).flat();
+  await qs.insert(triples, targetGraph, sudo);
+  
+  res.status(201).json({...req.query, status: "Author inserted"});
 });
 
 app.get("/clear", async (req, res) => {
