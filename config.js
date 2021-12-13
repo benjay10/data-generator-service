@@ -3,6 +3,7 @@ export const PREFIXES = `
   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
   PREFIX mu:   <http://mu.semte.ch/vocabularies/core/>
   PREFIX bks:  <http://mu.semte.ch/services/github/madnificent/book-service/books/>
+  PREFIX au:   <http://mu.semte.ch/services/github/madnificent/book-service/authors/>
   PREFIX sch:  <http://schema.org/>
   PREFIX nfo:  <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
   PREFIX nie:  <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>

@@ -32,6 +32,26 @@ app.get("/generate", async (req, res) => {
   res.status(201).json({...req.query, status: "Batches scheduled" });
 });
 
+app.get("/createBooks", async (req, res) => {
+  const authorUri   = req.query["author-uri"];
+  const items       = Number(req.query["items"]) || 10;
+  const targetGraph = req.query["target-graph"]  || "http://mu.semte.ch/application";
+  const withFiles   = req.query["with-files"] == "true" ? true : false;
+  const sudo        = req.query["target-graph"] ? true : false;
+  let fileSize;
+  if (["small", "medium", "large", "extra"].some((i) => i == req.query["file-size"])) {
+    fileSize = req.query["file-size"];
+  } else {
+    fileSize = "small";
+  }
+
+  const books = bks.makeBooks(items, withFiles, fileSize, authorUri);
+  const booksInTriples = books.map(book => book.toTriples()).flat();
+  await qs.insert(booksInTriples, targetGraph, sudo);
+
+  res.status(201).json({...req.query, status: "Books inserted"});
+});
+
 app.get("/clear", async (req, res) => {
   const targetGraph = req.query["target-graph"] || "http://mu.semte.ch/application";
   const sudo        = req.query["target-graph"] ? true : false;
