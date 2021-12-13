@@ -8,6 +8,7 @@ export const PREFIXES = `
   PREFIX nie:  <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
   PREFIX dct:  <http://purl.org/dc/terms/>
   PREFIX dbp:  <http://dbpedia.org/ontology/>
+  PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 `;
 export const FILE_PREFIX = "http://mu.semte.ch/services/file-service/files/";
 
