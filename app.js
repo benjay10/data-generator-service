@@ -1,5 +1,6 @@
 // see https://github.com/mu-semtech/mu-javascript-template for more info
 import { app }      from "mu";
+import * as mu      from "mu";
 import * as express from "express";
 import * as bks     from "./lib/MuBook.js";
 import * as au      from "./lib/MuAuthor.js";
@@ -29,7 +30,7 @@ app.get("/generate", async (req, res) => {
 
   //Push batches onto a global queue
   for (let batchNum = 0; batchNum < options.batches; batchNum++) {
-    bat.batchQueue.push({ batchNum, ...options });
+    bat.batchQueue.push({ batchMuUuid: mu.uuid(), batchNum, ...options });
   }
   bat.startBatches();
 
@@ -39,27 +40,27 @@ app.get("/generate", async (req, res) => {
 });
 
 app.get("/createBooks", async (req, res) => {
-  const authorUri   = req.query["author-uri"];
-  const items       = Number(req.query["items"]) || 10;
-  const targetGraph = req.query["target-graph"]  || "http://mu.semte.ch/application";
-  const withFiles   = req.query["with-files"] == "true" ? true : false;
-  const sudo        = req.query["target-graph"] ? true : false;
+  const authorUri     = req.query["author-uri"];
+  const itemsPerBatch = Number(req.query.items)   || 1;
+  const targetGraph   = req.query["target-graph"] || "http://mu.semte.ch/application";
+  const withFiles     = req.query["with-files"] == "true" ? true : false;
+  const sudo          = req.query["target-graph"] ? true : false;
   let fileSize;
   if (["small", "medium", "large", "extra"].some((i) => i == req.query["file-size"])) {
     fileSize = req.query["file-size"];
   } else {
     fileSize = "small";
   }
+  const options = { batches: 1, itemsPerBatch, pausePerBatch: 0, targetGraph, withFiles, sudo, fileSize, authorUri };
 
   await bat.initialiseCounters();
 
-  const books = bks.makeBooks(items, withFiles, fileSize, authorUri);
-  const booksInTriples = books.map(book => book.toTriples()).flat();
-  await qs.insert(booksInTriples, targetGraph, sudo);
+  bat.batchQueue.push({ batchMuUuid: mu.uuid(), batchNum: 0, ...options });
+  bat.startBatches();
 
   await bat.saveCounters();
 
-  res.status(201).json({...req.query, status: "Books inserted"});
+  res.status(201).json({...req.query, status: "Book creation scheduled"});
 });
 
 app.get("/createAuthor", async (req, res) => {
