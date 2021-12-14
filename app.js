@@ -15,7 +15,7 @@ app.get("/generate", async (req, res) => {
   const batches       = Number(req.query.batches)            || 1;
   const itemsPerBatch = Number(req.query["items-per-batch"]) || 10;
   const pausePerBatch = Number(req.query["pause-per-batch"]) || 0;
-  const targetGraph   = req.query["target-graph"]            || "http://mu.semte.ch/application";
+  const targetGraph   = req.query["target-graph"]            || conf.DEFAULT_GRAPH;
   const withFiles     = req.query["with-files"] == "true" ? true : false;
   const sudo          = req.query["target-graph"] ? true : false;
   let fileSize;
@@ -42,7 +42,7 @@ app.get("/generate", async (req, res) => {
 app.get("/createBooks", async (req, res) => {
   const authorUri     = req.query["author-uri"];
   const itemsPerBatch = Number(req.query.items)   || 1;
-  const targetGraph   = req.query["target-graph"] || "http://mu.semte.ch/application";
+  const targetGraph   = req.query["target-graph"] || conf.DEFAULT_GRAPH;
   const withFiles     = req.query["with-files"] == "true" ? true : false;
   const sudo          = req.query["target-graph"] ? true : false;
   let fileSize;
@@ -67,7 +67,7 @@ app.get("/createAuthor", async (req, res) => {
   const bookUri     = req.query["book-uri"];
   const authorUri   = req.query["author-uri"];
   const items       = Number(req.query.items)   || 1;
-  const targetGraph = req.query["target-graph"] || "http://mu.semte.ch/application";
+  const targetGraph = req.query["target-graph"] || conf.DEFAULT_GRAPH;
   const sudo        = req.query["target-graph"] ? true : false;
 
   bat.initialiseCounters();
@@ -90,7 +90,7 @@ app.get("/createAuthor", async (req, res) => {
 
 app.get("/createFiles", async (req, res) => {
   const items       = Number(req.query["items"]) || 1;
-  const targetGraph = req.query["target-graph"] || "http://mu.semte.ch/application";
+  const targetGraph = req.query["target-graph"] || conf.DEFAULT_GRAPH;
   const sudo        = req.query["target-graph"] ? true : false;
   let fileSize;
   if (["small", "medium", "large", "extra"].some((i) => i == req.query["file-size"])) {
@@ -112,11 +112,25 @@ app.get("/createFiles", async (req, res) => {
 });
 
 app.get("/clear", async (req, res) => {
-  const targetGraph = req.query["target-graph"] || "http://mu.semte.ch/application";
+  const targetGraph = req.query["target-graph"] || conf.DEFAULT_GRAPH;
   const sudo        = req.query["target-graph"] ? true : false;
 
   qs.clearGraph(targetGraph, sudo);
   res.status(201).json({status: "success"});
+});
+
+app.get("/deleteAuthor", async (req, res) => {
+  const authorUri = req.query["author-uri"];
+  const relation  = req.query.relation || "shallow";
+  const sudo      = req.query.sudo == "true" ? true : false;
+
+  if (!authorUri)
+    res.status(400).json({status: "Invalid request: no author-uri given to delete."});
+
+  const removePattern = au.removeAuthorPattern(authorUri, relation, sudo);
+  await qs.remove(removePattern, sudo);
+
+  res.status(201).json({...req.query, status: "Author removed"});
 });
 
 // POST /generate?
@@ -145,14 +159,15 @@ app.get("/clear", async (req, res) => {
 //                   & file-size=[small|medium|large|extra]  //optional, default: small
 
 // DELETE /batch?
-//                id=234232           // removes a whole batch
+//                uri=234232           // removes a whole batch
 // DELETE /book?
-//               id=61032423098423    // removes a specific book
+//               uri=61032423098423    // removes a specific book
 // DELETE /author?
-//                 id=61032423098423    // removes a specific author
-//               $ with-books=[true|false]
+//                 uri=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fauthor1%2F
+//               & relation=[shallow|withreferences|withbooks]
+//               & sudo=[true|false]
 // DELETE /graph?
-//                name=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2F
+//                uri=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2F
 
 // POST /reset  //This will reset counters and other things. Using generators after this could generate data that is already in a database.
 
