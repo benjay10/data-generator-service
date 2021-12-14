@@ -151,6 +151,37 @@ app.get("/deleteFile", async (req, res) => {
   res.status(201).json({...req.query, status: "File removed"});
 });
 
+app.get("/deleteBook", async (req, res) => {
+  const bookUri  = req.query["book-uri"];
+  const relation = req.query.relation || "shallow";
+  const sudo     = req.query.sudo == "true" ? true : false;
+
+  if (!bookUri)
+    res.status(400).json({status: "Invalid request: no book-uri given to delete."});
+
+  if (relation === "withfile") {
+    const filePuri = qs.getPuriForBookUri(bookUri);
+    await mf.removeFileFromPUri(filePuri);
+  }
+  const removePattern = bks.removeBookPattern(bookUri, relation, sudo);
+  await qs.remove(removePattern, sudo);
+
+  res.status(201).json({...req.query, status: "Book removed"});
+});
+
+app.get("/deleteBatch", async (req, res) => {
+  const batchUri = req.query["batch-uri"];
+  const sudo     = req.query.sudo == "true" ? true : false;
+
+  if (!batchUri)
+    res.status(400).json({status: "Invalid request: no batch-uri given to delete."});
+  
+  //Get the batch ranges
+  const { startBookRange, endBookRange } = await bat.getBatch(batchUri);
+  //Create a remove query, including files and authors, using VALUES
+  await qs.removeBatch(startBookRange, endBookRange, sudo);
+});
+
 // POST /generate?
 //                 batches=5
 //               & items-per-batch=100
@@ -180,6 +211,7 @@ app.get("/deleteFile", async (req, res) => {
 //                uri="http..."  // removes a whole batch
 // DELETE /book?
 //               uri="http..."  // removes a specific book
+//             & relation=[shallow|withfile]
 // DELETE /file?
 //               uri="http..."  // removes a specific file
 //             & relation=[shallow|withreference]
