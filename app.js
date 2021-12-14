@@ -7,6 +7,7 @@ import * as au      from "./lib/MuAuthor.js";
 import * as mf      from "./lib/MuFile.js";
 import * as qs      from "./lib/Queries.js";
 import * as bat     from "./lib/Batching.js";
+import * as conf    from "./config.js";
 
 app.use(express.json({type: "application/json"}));
 
@@ -70,7 +71,7 @@ app.get("/createAuthor", async (req, res) => {
   const targetGraph = req.query["target-graph"] || conf.DEFAULT_GRAPH;
   const sudo        = req.query["target-graph"] ? true : false;
 
-  bat.initialiseCounters();
+  await bat.initialiseCounters();
   
   if (bookUri && authorUri) {
     res.status(409).send({status: "Conflict: you can not give both book-uri and author-uri options."});
@@ -115,7 +116,7 @@ app.get("/clear", async (req, res) => {
   const targetGraph = req.query["target-graph"] || conf.DEFAULT_GRAPH;
   const sudo        = req.query["target-graph"] ? true : false;
 
-  qs.clearGraph(targetGraph, sudo);
+  await qs.clearGraph(targetGraph, sudo);
   res.status(201).json({status: "success"});
 });
 
@@ -142,8 +143,9 @@ app.get("/deleteFile", async (req, res) => {
     res.status(400).json({status: "Invalid request: no file-uri given to delete."});
 
   //Remove physical file
-  const filePUri = qs.getPuriForVuri(fileUri);
-  await mf.removeFileFromPUri(filePUri);
+  const filePUri = await qs.getPuriForVuri(fileUri);
+  if (filePuri)
+    await mf.removeFileFromPUri(filePUri);
   //Remove file triples
   const removePattern = mf.removeFilePattern(fileUri, relation,  sudo);
   await qs.remove(removePattern, sudo);
@@ -160,8 +162,9 @@ app.get("/deleteBook", async (req, res) => {
     res.status(400).json({status: "Invalid request: no book-uri given to delete."});
 
   if (relation === "withfile") {
-    const filePuri = qs.getPuriForBookUri(bookUri);
-    await mf.removeFileFromPUri(filePuri);
+    const filePuri = await qs.getPuriForBookUri(bookUri);
+    if (filePuri)
+      await mf.removeFileFromPUri(filePuri);
   }
   const removePattern = bks.removeBookPattern(bookUri, relation, sudo);
   await qs.remove(removePattern, sudo);
@@ -180,6 +183,8 @@ app.get("/deleteBatch", async (req, res) => {
   const { startBookRange, endBookRange } = await bat.getBatch(batchUri);
   //Create a remove query, including files and authors, using VALUES
   await qs.removeBatch(startBookRange, endBookRange, sudo);
+
+  res.status(201).json({...req.query, status: "Batch removed"});
 });
 
 // POST /generate?
@@ -221,6 +226,4 @@ app.get("/deleteBatch", async (req, res) => {
 //               & sudo=[true|false]
 // DELETE /graph?
 //                uri=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2F
-
-// POST /reset  //This will reset counters and other things. Using generators after this could generate data that is already in a database.
 

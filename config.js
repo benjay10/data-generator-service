@@ -18,5 +18,6 @@ export const MAX_TRIPLES_PER_QUERY = 100;
 
 export const SHARE_PATH = "/share/";
 
+export const DEFAULT_GRAPH    = "http://mu.semte.ch/graphs/application/";
 export const MANAGEMENT_GRAPH = "http://mu.semte.ch/graphs/management/";
 
