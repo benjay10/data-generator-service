@@ -133,6 +133,24 @@ app.get("/deleteAuthor", async (req, res) => {
   res.status(201).json({...req.query, status: "Author removed"});
 });
 
+app.get("/deleteFile", async (req, res) => {
+  const fileUri  = req.query["file-uri"];
+  const relation = req.query.relation || "shallow";
+  const sudo     = req.query.sudo == "true" ? true : false;
+
+  if (!fileUri)
+    res.status(400).json({status: "Invalid request: no file-uri given to delete."});
+
+  //Remove physical file
+  const filePUri = qs.getPuriForVuri(fileUri);
+  await mf.removeFileFromPUri(filePUri);
+  //Remove file triples
+  const removePattern = mf.removeFilePattern(fileUri, relation,  sudo);
+  await qs.remove(removePattern, sudo);
+
+  res.status(201).json({...req.query, status: "File removed"});
+});
+
 // POST /generate?
 //                 batches=5
 //               & items-per-batch=100
@@ -159,9 +177,12 @@ app.get("/deleteAuthor", async (req, res) => {
 //                   & file-size=[small|medium|large|extra]  //optional, default: small
 
 // DELETE /batch?
-//                uri=234232           // removes a whole batch
+//                uri="http..."  // removes a whole batch
 // DELETE /book?
-//               uri=61032423098423    // removes a specific book
+//               uri="http..."  // removes a specific book
+// DELETE /file?
+//               uri="http..."  // removes a specific file
+//             & relation=[shallow|withreference]
 // DELETE /author?
 //                 uri=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fauthor1%2F
 //               & relation=[shallow|withreferences|withbooks]
