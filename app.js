@@ -25,11 +25,15 @@ app.get("/generate", async (req, res) => {
   }
   const options = { batches, itemsPerBatch, pausePerBatch, targetGraph, withFiles, sudo, fileSize };
 
+  await bat.initialiseCounters();
+
   //Push batches onto a global queue
   for (let batchNum = 0; batchNum < options.batches; batchNum++) {
     bat.batchQueue.push({ batchNum, ...options });
   }
   bat.startBatches();
+
+  bat.saveCounters();
 
   res.status(201).json({...req.query, status: "Batches scheduled" });
 });
@@ -47,9 +51,13 @@ app.get("/createBooks", async (req, res) => {
     fileSize = "small";
   }
 
+  await bat.initialiseCounters();
+
   const books = bks.makeBooks(items, withFiles, fileSize, authorUri);
   const booksInTriples = books.map(book => book.toTriples()).flat();
   await qs.insert(booksInTriples, targetGraph, sudo);
+
+  await bat.saveCounters();
 
   res.status(201).json({...req.query, status: "Books inserted"});
 });
@@ -60,6 +68,8 @@ app.get("/createAuthor", async (req, res) => {
   const items       = Number(req.query.items)   || 1;
   const targetGraph = req.query["target-graph"] || "http://mu.semte.ch/application";
   const sudo        = req.query["target-graph"] ? true : false;
+
+  bat.initialiseCounters();
   
   if (bookUri && authorUri) {
     res.status(409).send({status: "Conflict: you can not give both book-uri and author-uri options."});
@@ -70,10 +80,7 @@ app.get("/createAuthor", async (req, res) => {
     return;
   }
 
-  let authors = [];
-  for (let i = 0; i < items; i++) {
-    authors.push(new au.MuAuthor(authorUri, (bookUri ? [bookUri] : [])));
-  }
+  const authors = au.makeAuthors(items, bookUri, authorUri);
   const triples = authors.map(a => a.toTriples()).flat();
   await qs.insert(triples, targetGraph, sudo);
   

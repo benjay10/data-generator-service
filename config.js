@@ -10,9 +10,13 @@ export const PREFIXES = `
   PREFIX dct:  <http://purl.org/dc/terms/>
   PREFIX dbp:  <http://dbpedia.org/ontology/>
   PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+  PREFIX ext:  <http://mu.semte.ch/vocabularies/extra>
 `;
 export const FILE_PREFIX = "http://mu.semte.ch/services/file-service/files/";
 
 export const MAX_TRIPLES_PER_QUERY = 100;
 
 export const SHARE_PATH = "/share/";
+
+export const MANAGEMENT_GRAPH = "http://mu.semte.ch/graphs/management/";
+
