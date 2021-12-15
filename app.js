@@ -118,7 +118,7 @@ app.delete("/graph", async (req, res) => {
   const sudo        = req.query["uri"] ? true : false;
 
   await qs.clearGraph(targetGraph, sudo);
-  res.status(201).json({..req.query, status: "Graph removed"});
+  res.status(201).json({...req.query, status: "Graph removed"});
 });
 
 app.delete("/author", async (req, res) => {
