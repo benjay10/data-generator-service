@@ -11,8 +11,8 @@ import * as conf    from "./config.js";
 
 app.use(express.json({type: "application/json"}));
 
-app.get("/generate", async (req, res) => {
-  // Checking query parameters and setting default values
+app.post("/generate", async (req, res) => {
+  //Checking query parameters and setting default values
   const batches       = Number(req.query.batches)            || 1;
   const itemsPerBatch = Number(req.query["items-per-batch"]) || 10;
   const pausePerBatch = Number(req.query["pause-per-batch"]) || 0;
@@ -27,20 +27,22 @@ app.get("/generate", async (req, res) => {
   }
   const options = { batches, itemsPerBatch, pausePerBatch, targetGraph, withFiles, sudo, fileSize };
 
+  //Get counters for certain things from a management graph in the triplestore
   await bat.initialiseCounters();
 
-  //Push batches onto a global queue
+  //Push batches onto a global queue and start them
   for (let batchNum = 0; batchNum < options.batches; batchNum++) {
     bat.batchQueue.push({ batchMuUuid: mu.uuid(), batchNum, ...options });
   }
   bat.startBatches();
 
+  //Update the counters in the triplestore
   bat.saveCounters();
 
   res.status(201).json({...req.query, status: "Batches scheduled" });
 });
 
-app.get("/createBooks", async (req, res) => {
+app.post("/create-books", async (req, res) => {
   const authorUri     = req.query["author-uri"];
   const itemsPerBatch = Number(req.query.items)   || 1;
   const targetGraph   = req.query["target-graph"] || conf.DEFAULT_GRAPH;
@@ -56,6 +58,7 @@ app.get("/createBooks", async (req, res) => {
 
   await bat.initialiseCounters();
 
+  //Push only a single job to the batch queue
   bat.batchQueue.push({ batchMuUuid: mu.uuid(), batchNum: 0, ...options });
   bat.startBatches();
 
@@ -64,7 +67,7 @@ app.get("/createBooks", async (req, res) => {
   res.status(201).json({...req.query, status: "Book creation scheduled"});
 });
 
-app.get("/createAuthor", async (req, res) => {
+app.post("/create-author", async (req, res) => {
   const bookUri     = req.query["book-uri"];
   const authorUri   = req.query["author-uri"];
   const items       = Number(req.query.items)   || 1;
@@ -73,6 +76,7 @@ app.get("/createAuthor", async (req, res) => {
 
   await bat.initialiseCounters();
   
+  //Request invalid in certain situations
   if (bookUri && authorUri) {
     res.status(409).send({status: "Conflict: you can not give both book-uri and author-uri options."});
     return;
@@ -82,6 +86,7 @@ app.get("/createAuthor", async (req, res) => {
     return;
   }
 
+  //Create authors manually (not in batches) and insert them
   const authors = au.makeAuthors(items, bookUri, authorUri);
   const triples = authors.map(a => a.toTriples()).flat();
   await qs.insert(triples, targetGraph, sudo);
@@ -89,7 +94,7 @@ app.get("/createAuthor", async (req, res) => {
   res.status(201).json({...req.query, status: "Author inserted"});
 });
 
-app.get("/createFiles", async (req, res) => {
+app.post("/create-files", async (req, res) => {
   const items       = Number(req.query["items"]) || 1;
   const targetGraph = req.query["target-graph"] || conf.DEFAULT_GRAPH;
   const sudo        = req.query["target-graph"] ? true : false;
@@ -100,41 +105,39 @@ app.get("/createFiles", async (req, res) => {
     fileSize = "small";
   }
 
-  let files = [];
-  for (let i = 0; i < items; i++) {
-    let f = new mf.MuFile(fileSize);
-    f.save();
-    files.push(f);
-  }
+  //Create files not in batches and save and insert them
+  let files = mf.makeFiles(items, fileSize);
   const triples = files.map(f => f.toTriples()).flat();
   await qs.insert(triples, targetGraph, sudo);
   
   res.status(201).json({...req.query, status: "Files saved and inserted"});
 });
 
-app.get("/clear", async (req, res) => {
-  const targetGraph = req.query["target-graph"] || conf.DEFAULT_GRAPH;
-  const sudo        = req.query["target-graph"] ? true : false;
+app.delete("/graph", async (req, res) => {
+  const targetGraph = req.query["uri"] || conf.DEFAULT_GRAPH;
+  const sudo        = req.query["uri"] ? true : false;
 
   await qs.clearGraph(targetGraph, sudo);
-  res.status(201).json({status: "success"});
+  res.status(201).json({..req.query, status: "Graph removed"});
 });
 
-app.get("/deleteAuthor", async (req, res) => {
+app.delete("/author", async (req, res) => {
   const authorUri = req.query["author-uri"];
   const relation  = req.query.relation || "shallow";
   const sudo      = req.query.sudo == "true" ? true : false;
 
+  //If no author, nothing can happen
   if (!authorUri)
     res.status(400).json({status: "Invalid request: no author-uri given to delete."});
 
+  //Construct a pattern for the author to be removed and use in query to execute
   const removePattern = au.removeAuthorPattern(authorUri, relation, sudo);
   await qs.remove(removePattern, sudo);
 
   res.status(201).json({...req.query, status: "Author removed"});
 });
 
-app.get("/deleteFile", async (req, res) => {
+app.delete("/file", async (req, res) => {
   const fileUri  = req.query["file-uri"];
   const relation = req.query.relation || "shallow";
   const sudo     = req.query.sudo == "true" ? true : false;
@@ -147,13 +150,13 @@ app.get("/deleteFile", async (req, res) => {
   if (filePuri)
     await mf.removeFileFromPUri(filePUri);
   //Remove file triples
-  const removePattern = mf.removeFilePattern(fileUri, relation,  sudo);
+  const removePattern = mf.removeFilePattern(fileUri, relation, sudo);
   await qs.remove(removePattern, sudo);
 
   res.status(201).json({...req.query, status: "File removed"});
 });
 
-app.get("/deleteBook", async (req, res) => {
+app.delete("/book", async (req, res) => {
   const bookUri  = req.query["book-uri"];
   const relation = req.query.relation || "shallow";
   const sudo     = req.query.sudo == "true" ? true : false;
@@ -161,18 +164,20 @@ app.get("/deleteBook", async (req, res) => {
   if (!bookUri)
     res.status(400).json({status: "Invalid request: no book-uri given to delete."});
 
+  //Remove file when asked for
   if (relation === "withfile") {
     const filePuri = await qs.getPuriForBookUri(bookUri);
     if (filePuri)
       await mf.removeFileFromPUri(filePuri);
   }
+  //Remove book (and possibly file-) triples
   const removePattern = bks.removeBookPattern(bookUri, relation, sudo);
   await qs.remove(removePattern, sudo);
 
   res.status(201).json({...req.query, status: "Book removed"});
 });
 
-app.get("/deleteBatch", async (req, res) => {
+app.delete("/batch", async (req, res) => {
   const batchUri = req.query["batch-uri"];
   const sudo     = req.query.sudo == "true" ? true : false;
 
