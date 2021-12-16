@@ -1,10 +1,10 @@
 # data-generator-service
 
-This is a service that can generate semi-random data to test some basic capabilities of data related services. E.g. testing throuphput, testing if data ends up in the correct places, testing synchronisation correctness with or without files, ...
+This is a service that can generate semi-random data to test some basic capabilities of data related services. E.g. testing throughput, testing if data ends up in the correct places, testing synchronisation correctness with or without files, ...
 
 ## Get started
 
-This services uses the mu-javascript template. Run it directly in a Docker setup mounting the source code folder conataining the `app.js` to the `/app` folder of the mu-javascript template, or use the dockerfile to build your own image.
+This services uses the mu-javascript template. Run it directly in a Docker setup mounting the source code folder containing the `app.js` to the `/app` folder of the mu-javascript template, or use the dockerfile to build your own image.
 
 Also mount a storage folder for files on the path `/share`.
 
