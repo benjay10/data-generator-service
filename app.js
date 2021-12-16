@@ -13,9 +13,9 @@ app.use(express.json({type: "application/json"}));
 
 app.post("/generate", async (req, res) => {
   //Checking query parameters and setting default values
-  const batches       = Number(req.query.batches)            || 1;
+  const batches       = Number(req.query.batches)            || 5;
   const itemsPerBatch = Number(req.query["items-per-batch"]) || 10;
-  const pausePerBatch = Number(req.query["pause-per-batch"]) || 0;
+  const pausePerBatch = Number(req.query["pause-per-batch"]) || 100;
   const targetGraph   = req.query["target-graph"]            || conf.DEFAULT_GRAPH;
   const withFiles     = req.query["with-files"] == "true" ? true : false;
   const sudo          = req.query["target-graph"] ? true : false;
@@ -44,7 +44,7 @@ app.post("/generate", async (req, res) => {
 
 app.post("/create-books", async (req, res) => {
   const authorUri     = req.query["author-uri"];
-  const itemsPerBatch = Number(req.query.items)   || 1;
+  const itemsPerBatch = Number(req.query.items)   || 10;
   const targetGraph   = req.query["target-graph"] || conf.DEFAULT_GRAPH;
   const withFiles     = req.query["with-files"] == "true" ? true : false;
   const sudo          = req.query["target-graph"] ? true : false;
