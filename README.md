@@ -14,7 +14,7 @@ This service aims to provide sensible defaults and given that this service only 
 
 ## API
 
-This section explains the API details of this service. Options are given as URL query parameters, not as POST data: e.g. the first POST request below could be written as `http://<host>/generate?batches=5&items-per-batch=100%pause-per-batch=true&...`.
+This section explains the API details of this service. Options are given as URL query parameters, not as POST data: e.g. the first POST request below could be written as `http://<host>/generate?batches=5&items-per-batch=100&pause-per-batch=true&...`.
 
 ### POST /generate
 
