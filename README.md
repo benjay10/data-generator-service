@@ -41,8 +41,8 @@ Query parameter | Values | Explanation
 
 Query parameter | Values | Explanation
 ----------------|--------|------------
-`book-uri`      | URL encoded (or not) URI | URI of the book to create some new authors for. E.g. `http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fbook123%2F`
-`author-uri`    | URL encoded (or not) URI | URI of the author to be created, and some info to be added. E.g. `http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fauthor1%2F`
+`book-uri`      | URL encoded (or not) URI | URI of the book to create some new authors for. E.g. `http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fbook123%2F`. Do not use together with `author-uri`. A number of authors will be added to this book.
+`author-uri`    | URL encoded (or not) URI | URI of the author to be created, and some info to be added that was missing of previously deleted (with `shallow`). E.g. `http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fauthor1%2F`. Do not use together with `book-uri` and not with `items`, as those are impossible combinations.
 `items`         | Integer, default: 1 | Amount of authors to create.
 `target-graph`  | URL encoded URI (or not), default: `http%3A%2F%2Fmu.semte.ch%2Fgraphs%2Fapplication` | URL encoded graph in wich to insert the data. Supplying no graph is without mu-auth-sudo, but supplying a graph always uses mu-auth-sudo, because you want to bypass the graph dispatching mechanism.
 
