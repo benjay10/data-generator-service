@@ -104,9 +104,15 @@ Query parameter | Values | Explanation
 
 Query parameter | Values | Explanation
 ----------------|--------|------------
-`uri`           | URL encoded (or not) URI | URI of the specific book to remove
-| URI of the specific file to remove. Use the virtual file URI that is also referenced by the book.
+`uri`           | URL encoded (or not) URI | URI of the specific file to remove. Use the virtual file URI that is also referenced by the book.
 `relation`      | `shallow`, `withreference`, default: `shallow` | The level of things to delete. `shallow` only removes the file and leaves everything else. `withreference` also removes the reference on the book.
+
+### DELETE /file-resource
+
+Query parameter | Values | Explanation
+----------------|--------|------------
+`uuid`          | UUID   | UUID of the specific file to remove
+`relation`      | `withreference`, default: `withreference` | The level of things to delete. `withreference` also removes the reference on the book.
 
 ### DELETE /author
 
@@ -123,7 +129,7 @@ Delete an author using mu-cl-resources.
 Query parameter | Values | Explanation
 ----------------|--------|------------
 `author-uuid`   | UUID   | UUID of the specific author to remove. E.g. `61C1D74433AEF3DAC9EBDB7B`
-`relation`      | `shallow`, `withreferences`, `withbooks`, default: `shallow` | The level of things to delete. `shallow` only removes the author and leaves their books. `withreferences` also removes the reference to the author from the books. `withbooks` also removes the books associated with this author.
+`relation`      | `withreferences`, `withbooks`, default: `withreferences` | The level of things to delete. `withreferences` also removes the reference to the author from the books. `withbooks` also removes the books associated with this author.
 
 ### DELETE /graph
 

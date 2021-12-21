@@ -254,7 +254,7 @@ app.delete("/author-resource", async (req, res) => {
 
     //If no author, nothing can happen
     if (!authorUuid)
-      res.status(400).json({status: "Invalid request: no author-uri given to delete."});
+      res.status(400).json({status: "Invalid request: no author-uuid given to delete."});
 
     await reso.deleteAuthor(authorUuid, relation);
 
@@ -282,6 +282,24 @@ app.delete("/file", async (req, res) => {
     //Remove file triples
     const removePattern = mf.removeFilePattern(fileUri, relation, sudo);
     await qs.remove(removePattern, sudo);
+
+    res.status(201).json({...req.query, status: "File removed"});
+  }
+  catch (err) {
+    console.log(err);
+    res.status(500).send("Error!\n" + err.stack.toString());
+  }
+});
+
+app.delete("/file-resource", async (req, res) => {
+  try {
+    const fileUuid = req.query["file-uuid"];
+    const relation = req.query.relation || "withreference";
+
+    if (!fileUuid)
+      res.status(400).json({status: "Invalid request: no file-uuid given to delete."});
+
+    await reso.deleteFile(fileUuid);
 
     res.status(201).json({...req.query, status: "File removed"});
   }
