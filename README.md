@@ -37,6 +37,16 @@ Query parameter | Values | Explanation
 `file-size`     | `small`, `medium`, `large`, `extra`, default: `small` | The approximate filesize of the associated files, ranging from a couple of bytes to 100MB.
 `author-uri`    | e.g. `http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fauthor1%2F` | OPTIONAL. Author URI that you want to create books for. Without URI, create new books with new authors.
 
+### POST /create-book-resources
+
+Use mu-cl-resources to create books instead of direct queries. This limits some capabilities and books are created one at a time. Creating books like this will take a lot more time than with queries.
+
+Query parameter | Values | Explanation
+----------------|--------|------------
+`items`         | Integer, default: `10` | Amount of books you want for this batch.
+`with-files`    | `true`, `false`, default `false` | Set to true if you also want a file associated per individual and stored to the mounted volume.
+`file-size`     | `small`, `medium`, `large`, `extra`, default: `small` | The approximate filesize of the associated files, ranging from a couple of bytes to 100MB.
+
 ### POST /create-author
 
 Query parameter | Values | Explanation
@@ -46,24 +56,36 @@ Query parameter | Values | Explanation
 `items`         | Integer, default: 1 | Amount of authors to create.
 `target-graph`  | URL encoded URI (or not), default: `http%3A%2F%2Fmu.semte.ch%2Fgraphs%2Fapplication` | URL encoded graph in wich to insert the data. Supplying no graph is without mu-auth-sudo, but supplying a graph always uses mu-auth-sudo, because you want to bypass the graph dispatching mechanism.
 
+### POST /create-author-resources
+
+Create authors using mu-cl-resources.
+
+Query parameter | Values | Explanation
+----------------|--------|------------
+`items`         | Integer, default: 1 | Amount of authors to create.
+
 ### POST /create-files
+
 Query parameter | Values | Explanation
 ----------------|--------|------------
 `items`         | Integer, default: 10 | Amount of random files to generate.
 `file-size`     | `small`, `medium`, `large`, `extra`, default: `small` | The approximate filesize of the associated files, ranging from a couple of bytes to 100MB.
 
 ### DELETE /batch
+
 Query parameter | Values | Explanation
 ----------------|--------|------------
 `uri`           | URL encoded (or not) URI | URI of the batch to remove.
 
 ### DELETE /book
+
 Query parameter | Values | Explanation
 ----------------|--------|------------
 `uri`           | URL encoded (or not) URI | URI of the specific book to remove
 `relation`      | `shallow`, `withfile`, default: `shallow` | The level of things to delete. `shallow` only removes the book and leaves the file and authors in the database. `withfile` also removes the files.
 
 ### DELETE /file
+
 Query parameter | Values | Explanation
 ----------------|--------|------------
 `uri`           | URL encoded (or not) URI | URI of the specific book to remove
@@ -71,6 +93,7 @@ Query parameter | Values | Explanation
 `relation`      | `shallow`, `withreference`, default: `shallow` | The level of things to delete. `shallow` only removes the file and leaves everything else. `withreference` also removes the reference on the book.
 
 ### DELETE /author
+
 Query parameter | Values | Explanation
 ----------------|--------|------------
 `uri`           | URL encoded (or not) URI | URI of the specific author to remove. E.g. `http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fauthor1%2F`
@@ -78,6 +101,7 @@ Query parameter | Values | Explanation
 `sudo`          | `true`, `false`, default: `false` | Set to true to use mu-auth-sudo.
 
 ### DELETE /graph
+
 Query parameter | Values | Explanation
 ----------------|--------|------------
 `uri`           | URL encoded (or not) URI | URI of the graph to be cleared. E.g. `http%3A%2F%2Fmu.semte.ch%2graphs%2Fapplication`

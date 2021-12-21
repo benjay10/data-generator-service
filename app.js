@@ -7,6 +7,7 @@ import * as au      from "./lib/MuAuthor.js";
 import * as mf      from "./lib/MuFile.js";
 import * as qs      from "./lib/Queries.js";
 import * as bat     from "./lib/Batching.js";
+import * as reso    from "./lib/Resources.js";
 import * as conf    from "./config.js";
 
 app.use(express.json({type: "application/json"}));
@@ -79,7 +80,7 @@ app.post("/create-books", async (req, res) => {
   }
 });
 
-app.post("/create-books-resources", async (req, res) => {
+app.post("/create-book-resources", async (req, res) => {
   try {
     const itemsPerBatch = Number(req.query.items) || 10;
     const withFiles     = req.query["with-files"] == "true" ? true : false;
@@ -131,6 +132,28 @@ app.post("/create-author", async (req, res) => {
     const authors = au.makeAuthors(items, bookUri, authorUri);
     const triples = authors.map(a => a.toTriples()).flat();
     await qs.insert(triples, targetGraph, sudo);
+    
+    await bat.saveCounters();
+
+    res.status(201).json({...req.query, status: "Author inserted"});
+  }
+  catch (err) {
+    console.log(err);
+    res.status(500).send("Error!\n" + err.stack.toString());
+  }
+});
+
+app.post("/create-author-resources", async (req, res) => {
+  try {
+    const items = Number(req.query.items) || 1;
+
+    await bat.initialiseCounters();
+
+    //Create authors manually (not in batches) and insert them
+    const authors = au.makeAuthors(items);
+    await reso.saveAuthors(authors);
+
+    await bat.saveCounters();
     
     res.status(201).json({...req.query, status: "Author inserted"});
   }
