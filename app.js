@@ -176,7 +176,8 @@ app.post("/create-files", async (req, res) => {
     }
 
     //Create files not in batches and save and insert them
-    let files = mf.makeFiles(items, fileSize);
+    const files = mf.makeFiles(items, fileSize);
+    files.forEach(f => f.save());
     const triples = files.map(f => f.toTriples()).flat();
     await qs.insert(triples, targetGraph, sudo);
     
@@ -199,7 +200,7 @@ app.post("/create-file-resources", async (req, res) => {
     }
 
     //Create files not in batches and save and insert them
-    let files = mf.makeFiles(items, fileSize);
+    const files = mf.makeFiles(items, fileSize);
     await reso.saveFiles(files);
     
     res.status(201).json({...req.query, status: "Files saved and inserted"});
