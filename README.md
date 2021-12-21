@@ -97,7 +97,7 @@ Query parameter | Values | Explanation
 
 Query parameter | Values | Explanation
 ----------------|--------|------------
-`uuid`          | UUID   | UUID of the specific book to remove
+`book-uuid      | UUID   | UUID of the specific book to remove
 `relation`      | `shallow`, `withfile`, default: `shallow` | The level of things to delete. `shallow` only removes the book and leaves the file and authors in the database. `withfile` also removes the files.
 
 ### DELETE /file

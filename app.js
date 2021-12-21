@@ -336,6 +336,24 @@ app.delete("/book", async (req, res) => {
   }
 });
 
+app.delete("/book-resource", async (req, res) => {
+  try {
+    const bookUuid = req.query["book-uuid"];
+    const relation = req.query.relation || "shallow";
+
+    if (!bookUuid)
+      res.status(400).json({status: "Invalid request: no book-uuid given to delete."});
+
+    await reso.deleteBook(bookUuid, relation);
+
+    res.status(201).json({...req.query, status: "Book removed"});
+  }
+  catch (err) {
+    console.log(err);
+    res.status(500).send("Error!\n" + err.stack.toString());
+  }
+});
+
 app.delete("/batch", async (req, res) => {
   try {
     const batchUri = req.query["batch-uri"];
