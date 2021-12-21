@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@lblod/mu-auth-sudo": "^0.2.0",
+    "form-data": "^4.0.0",
     "node-fetch": "^2.6.6"
   },
   "scripts": {

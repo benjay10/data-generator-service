@@ -188,6 +188,28 @@ app.post("/create-files", async (req, res) => {
   }
 });
 
+app.post("/create-file-resources", async (req, res) => {
+  try {
+    const items = Number(req.query["items"]) || 1;
+    let fileSize;
+    if (["small", "medium", "large", "extra"].some((i) => i == req.query["file-size"])) {
+      fileSize = req.query["file-size"];
+    } else {
+      fileSize = "small";
+    }
+
+    //Create files not in batches and save and insert them
+    let files = mf.makeFiles(items, fileSize);
+    await reso.saveFiles(files);
+    
+    res.status(201).json({...req.query, status: "Files saved and inserted"});
+  }
+  catch (err) {
+    console.log(err);
+    res.status(500).send("Error!\n" + err.stack.toString());
+  }
+});
+
 app.delete("/graph", async (req, res) => {
   try {
     const targetGraph = req.query["uri"] || conf.DEFAULT_GRAPH;

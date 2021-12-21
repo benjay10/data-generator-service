@@ -71,6 +71,15 @@ Query parameter | Values | Explanation
 `items`         | Integer, default: 10 | Amount of random files to generate.
 `file-size`     | `small`, `medium`, `large`, `extra`, default: `small` | The approximate filesize of the associated files, ranging from a couple of bytes to 100MB.
 
+### POST /create-file-resources
+
+Create files using a file service.
+
+Query parameter | Values | Explanation
+----------------|--------|------------
+`items`         | Integer, default: 10 | Amount of random files to generate.
+`file-size`     | `small`, `medium`, `large`, `extra`, default: `small` | The approximate filesize of the associated files, ranging from a couple of bytes to 100MB.
+
 ### DELETE /batch
 
 Query parameter | Values | Explanation
