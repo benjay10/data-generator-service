@@ -53,7 +53,6 @@ app.post("/create-books", async (req, res) => {
     const authorUri     = req.query["author-uri"];
     const itemsPerBatch = Number(req.query.items)   || 10;
     const targetGraph   = req.query["target-graph"] || conf.DEFAULT_GRAPH;
-    const useResources  = req.query["use-resources"] == "true" ? true : false;
     const withFiles     = req.query["with-files"] == "true" ? true : false;
     const sudo          = req.query["target-graph"] ? true : false;
     let fileSize;
@@ -62,7 +61,35 @@ app.post("/create-books", async (req, res) => {
     } else {
       fileSize = "small";
     }
-    const options = { batches: 1, itemsPerBatch, pausePerBatch: 0, targetGraph, useResources, withFiles, sudo, fileSize, authorUri };
+    const options = { batches: 1, itemsPerBatch, pausePerBatch: 0, targetGraph: false, useResources, withFiles, sudo, fileSize, authorUri };
+
+    await bat.initialiseCounters();
+
+    //Push only a single job to the batch queue
+    bat.batchQueue.push({ batchMuUuid: mu.uuid(), batchNum: 0, ...options });
+    bat.startBatches();
+
+    await bat.saveCounters();
+
+    res.status(201).json({...req.query, status: "Book creation scheduled"});
+  }
+  catch (err) {
+    console.log(err);
+    res.status(500).send("Error!\n" + err.stack.toString());
+  }
+});
+
+app.post("/create-books-resources", async (req, res) => {
+  try {
+    const itemsPerBatch = Number(req.query.items) || 10;
+    const withFiles     = req.query["with-files"] == "true" ? true : false;
+    let fileSize;
+    if (["small", "medium", "large", "extra"].some((i) => i == req.query["file-size"])) {
+      fileSize = req.query["file-size"];
+    } else {
+      fileSize = "small";
+    }
+    const options = { batches: 1, itemsPerBatch, pausePerBatch: 0, targetGraph: undefined, useResources: true, withFiles, sudo: false, fileSize, authorUri: undefined };
 
     await bat.initialiseCounters();
 
