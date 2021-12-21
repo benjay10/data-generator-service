@@ -4,9 +4,9 @@
   "description": "Microservice that generates some random data",
   "type": "module",
   "dependencies": {
-    "@lblod/mu-auth-sudo": "^0.2.0"
+    "@lblod/mu-auth-sudo": "^0.2.0",
+    "node-fetch": "^2.6.6"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

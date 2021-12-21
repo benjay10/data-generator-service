@@ -26,7 +26,7 @@ app.post("/generate", async (req, res) => {
     } else {
       fileSize = "small";
     }
-    const options = { batches, itemsPerBatch, pausePerBatch, targetGraph, withFiles, sudo, fileSize };
+    const options = { batches, itemsPerBatch, pausePerBatch, targetGraph, useResources: false, withFiles, sudo, fileSize };
 
     //Get counters for certain things from a management graph in the triplestore
     await bat.initialiseCounters();
@@ -53,6 +53,7 @@ app.post("/create-books", async (req, res) => {
     const authorUri     = req.query["author-uri"];
     const itemsPerBatch = Number(req.query.items)   || 10;
     const targetGraph   = req.query["target-graph"] || conf.DEFAULT_GRAPH;
+    const useResources  = req.query["use-resources"] == "true" ? true : false;
     const withFiles     = req.query["with-files"] == "true" ? true : false;
     const sudo          = req.query["target-graph"] ? true : false;
     let fileSize;
@@ -61,7 +62,7 @@ app.post("/create-books", async (req, res) => {
     } else {
       fileSize = "small";
     }
-    const options = { batches: 1, itemsPerBatch, pausePerBatch: 0, targetGraph, withFiles, sudo, fileSize, authorUri };
+    const options = { batches: 1, itemsPerBatch, pausePerBatch: 0, targetGraph, useResources, withFiles, sudo, fileSize, authorUri };
 
     await bat.initialiseCounters();
 
@@ -260,6 +261,7 @@ app.delete("/batch", async (req, res) => {
 //                   & target-graph=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2F
 //                   & with-files=[true|false]
 //                   & file-size=[small|medium|large|extra]  //optional, default: small
+//                   & resources=[true|false]                //use mu-cl-resources, default: false
 
 // POST /create-author?
 //                      book-uri=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fbook123%2F  //optional, add new author to this book

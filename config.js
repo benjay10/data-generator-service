@@ -14,6 +14,8 @@ export const PREFIXES = `
 `;
 export const FILE_PREFIX = "http://mu.semte.ch/services/file-service/files/";
 
+export const RESOURCE_HOST = "http://resources/";
+
 export const MAX_TRIPLES_PER_QUERY = 100;
 
 export const SHARE_PATH = "/share/";
