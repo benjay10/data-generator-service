@@ -14,7 +14,7 @@ This service aims to provide sensible defaults and given that this service only 
 
 ## API
 
-This section explains the API details of this service. Options are given as URL query parameters, not as POST data: e.g. the first POST request below could be written as `http://<host>/generate?batches=5&items-per-batch=100&pause-per-batch=true&...`.
+This section explains the API details of this service. Options are given as URL query parameters, not as POST data: e.g. the first POST request below could be written as `http://<host>/generate?batches=5&items-per-batch=100&pause-per-batch=1000&...`.
 
 ### POST /generate
 
@@ -93,6 +93,13 @@ Query parameter | Values | Explanation
 `uri`           | URL encoded (or not) URI | URI of the specific book to remove
 `relation`      | `shallow`, `withfile`, default: `shallow` | The level of things to delete. `shallow` only removes the book and leaves the file and authors in the database. `withfile` also removes the files.
 
+### DELETE /book-resource
+
+Query parameter | Values | Explanation
+----------------|--------|------------
+`uuid`          | UUID   | UUID of the specific book to remove
+`relation`      | `shallow`, `withfile`, default: `shallow` | The level of things to delete. `shallow` only removes the book and leaves the file and authors in the database. `withfile` also removes the files.
+
 ### DELETE /file
 
 Query parameter | Values | Explanation
@@ -108,6 +115,15 @@ Query parameter | Values | Explanation
 `uri`           | URL encoded (or not) URI | URI of the specific author to remove. E.g. `http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fauthor1%2F`
 `relation`      | `shallow`, `withreferences`, `withbooks`, default: `shallow` | The level of things to delete. `shallow` only removes the author and leaves their books. `withreferences` also removes the reference to the author from the books. `withbooks` also removes the books associated with this author.
 `sudo`          | `true`, `false`, default: `false` | Set to true to use mu-auth-sudo.
+
+### DELETE /author-resource
+
+Delete an author using mu-cl-resources.
+
+Query parameter | Values | Explanation
+----------------|--------|------------
+`author-uuid`   | UUID   | UUID of the specific author to remove. E.g. `61C1D74433AEF3DAC9EBDB7B`
+`relation`      | `shallow`, `withreferences`, `withbooks`, default: `shallow` | The level of things to delete. `shallow` only removes the author and leaves their books. `withreferences` also removes the reference to the author from the books. `withbooks` also removes the books associated with this author.
 
 ### DELETE /graph
 

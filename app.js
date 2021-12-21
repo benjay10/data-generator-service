@@ -62,7 +62,7 @@ app.post("/create-books", async (req, res) => {
     } else {
       fileSize = "small";
     }
-    const options = { batches: 1, itemsPerBatch, pausePerBatch: 0, targetGraph: false, useResources, withFiles, sudo, fileSize, authorUri };
+    const options = { batches: 1, itemsPerBatch, pausePerBatch: 0, targetGraph, useResources: false, withFiles, sudo, fileSize, authorUri };
 
     await bat.initialiseCounters();
 
@@ -238,6 +238,25 @@ app.delete("/author", async (req, res) => {
     //Construct a pattern for the author to be removed and use in query to execute
     const removePattern = au.removeAuthorPattern(authorUri, relation, sudo);
     await qs.remove(removePattern, sudo);
+
+    res.status(201).json({...req.query, status: "Author removed"});
+  }
+  catch (err) {
+    console.log(err);
+    res.status(500).send("Error!\n" + err.stack.toString());
+  }
+});
+
+app.delete("/author-resource", async (req, res) => {
+  try {
+    const authorUuid = req.query["author-uuid"];
+    const relation   = req.query.relation || "withreference";
+
+    //If no author, nothing can happen
+    if (!authorUuid)
+      res.status(400).json({status: "Invalid request: no author-uri given to delete."});
+
+    await reso.deleteAuthor(authorUuid, relation);
 
     res.status(201).json({...req.query, status: "Author removed"});
   }
