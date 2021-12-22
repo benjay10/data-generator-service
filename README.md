@@ -137,3 +137,11 @@ Query parameter | Values | Explanation
 ----------------|--------|------------
 `uri`           | URL encoded (or not) URI | URI of the graph to be cleared. E.g. `http%3A%2F%2Fmu.semte.ch%2graphs%2Fapplication`
 
+### DELETE /clear
+
+Use this to clear all the graphs that where used during testing. 
+
+Query parameter | Values | Explanation
+----------------|--------|------------
+`include-manual` | `true`, `false`, default: `true` | Set to true if all the graphs that where ever used during a manual target should be cleared or to false if only the default graphs should be cleared.
+

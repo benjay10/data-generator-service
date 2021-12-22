@@ -32,6 +32,10 @@ app.post("/generate", async (req, res) => {
     //Get counters for certain things from a management graph in the triplestore
     await bat.initialiseCounters();
 
+    //Store the targetGraph, for when all testdata ever needs to be cleared
+    if (targetGraph != conf.DEFAULT_GRAPH)
+      await qs.storeTargetGraph(targetGraph);
+
     //Push batches onto a global queue and start them
     for (let batchNum = 0; batchNum < options.batches; batchNum++) {
       bat.batchQueue.push({ batchMuUuid: mu.uuid(), batchNum, ...options });
@@ -65,6 +69,10 @@ app.post("/create-books", async (req, res) => {
     const options = { batches: 1, itemsPerBatch, pausePerBatch: 0, targetGraph, useResources: false, withFiles, sudo, fileSize, authorUri };
 
     await bat.initialiseCounters();
+
+    //Store the targetGraph, for when all testdata ever needs to be cleared
+    if (targetGraph != conf.DEFAULT_GRAPH)
+      await qs.storeTargetGraph(targetGraph);
 
     //Push only a single job to the batch queue
     bat.batchQueue.push({ batchMuUuid: mu.uuid(), batchNum: 0, ...options });
@@ -131,6 +139,7 @@ app.post("/create-author", async (req, res) => {
     //Create authors manually (not in batches) and insert them
     const authors = au.makeAuthors(items, bookUri, authorUri);
     const triples = authors.map(a => a.toTriples()).flat();
+    await qs.storeTargetGraph(targetGraph);
     await qs.insert(triples, targetGraph, sudo);
     
     await bat.saveCounters();
@@ -179,6 +188,7 @@ app.post("/create-files", async (req, res) => {
     const files = mf.makeFiles(items, fileSize);
     files.forEach(f => f.save());
     const triples = files.map(f => f.toTriples()).flat();
+    await qs.storeTargetGraph(targetGraph);
     await qs.insert(triples, targetGraph, sudo);
     
     res.status(201).json({...req.query, status: "Files saved and inserted"});
@@ -375,44 +385,31 @@ app.delete("/batch", async (req, res) => {
   }
 });
 
-// POST /generate?
-//                 batches=5
-//               & items-per-batch=100
-//               & pause-per-batch=1000     //this will be a pause in ms, 0 means no pause.
-//               & target-graph=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2F
-//               & with-files=[true|false]
-//               & file-size=[small|medium|large|extra]  //optional, default: small
+app.delete("/clear", async (req, res) => {
+  try {
+    const includeManual = req.query["include-manual"] == "false" ? false : true;
 
-// POST /create-books?
-//                     author-uri=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fauthor1%2F  //optional
-//                   & items=100
-//                   & target-graph=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2F
-//                   & with-files=[true|false]
-//                   & file-size=[small|medium|large|extra]  //optional, default: small
-//                   & resources=[true|false]                //use mu-cl-resources, default: false
+    if (includeManual) {
+      const graphs = await qs.getTargetGraphs();
+      if (graphs)
+        for (const graph of graphs) {
+          await qs.clearGraph(graph, true)
+        }
+    }
 
-// POST /create-author?
-//                      book-uri=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fbook123%2F  //optional, add new author to this book
-//                    & author-uri=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fauthor1%2F  //optional, create info about author, already added to some books
-//                    & items=100
-//                    & target-graph=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2F
+    await qs.clearGraph(conf.DEFAULT_GRAPH, true);
+    await qs.clearGraph(conf.DEFAULT_GRAPH, false);
+    await qs.clearGraph(conf.MANAGEMENT_GRAPH, true);
 
-// POST /create-files?
-//                     items=10
-//                   & file-size=[small|medium|large|extra]  //optional, default: small
+    //Clear the local counters for some resources
+    au.clear();
+    bks.clear();
 
-// DELETE /batch?
-//                uri="http..."  // removes a whole batch
-// DELETE /book?
-//               uri="http..."  // removes a specific book
-//             & relation=[shallow|withfile]
-// DELETE /file?
-//               uri="http..."  // removes a specific file
-//             & relation=[shallow|withreference]
-// DELETE /author?
-//                 uri=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2Fauthor1%2F
-//               & relation=[shallow|withreferences|withbooks]
-//               & sudo=[true|false]
-// DELETE /graph?
-//                uri=http%3A%2F%2Fmu.semte.ch%2Fbookstore%2F
+    res.status(201).json({...req.query, status: "Graphs cleared"});
+  }
+  catch (err) {
+    console.log(err);
+    res.status(500).send("Error!\n" + err.stack.toString());
+  }
+});
 
