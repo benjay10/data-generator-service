@@ -4,4 +4,6 @@ package-lock.json
 build.sh
 .vimrc
 taskell.md
+Ignore-*
+
 
